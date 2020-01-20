@@ -14,7 +14,7 @@ config WIFI_PASSWORD
         
 config XCLK_FREQ
     int "XCLK Frequency"
-    default "12000000"
+    default "20000000"
     help
         The XCLK Frequency in Herz.
         
