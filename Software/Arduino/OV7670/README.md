@@ -67,14 +67,14 @@ Specific pins used in this example to connect ESP32 and camera are shown in tabl
 | Vertical Sync | VSYNC | IO25 | IO22 |
 | Horizontal Reference | HREF | IO23 | IO26 |
 | Pixel Clock | PCLK | IO22 | IO21 |
-| Pixel Data Bit 0 | D2 | IO4 | IO35 |
-| Pixel Data Bit 1 | D3 | IO5 | IO17 |
-| Pixel Data Bit 2 | D4 | IO18 | IO34 |
-| Pixel Data Bit 3 | D5 | IO19 | IO5 |
-| Pixel Data Bit 4 | D6 | IO36 | IO39 |
-| Pixel Data Bit 5 | D7 | IO39 | IO18 |
-| Pixel Data Bit 6 | D8 | IO34 | IO36 |
-| Pixel Data Bit 7 | D9 | IO35 | IO19 |
+| Pixel Data Bit 0 | D0 | IO4 | IO35 |
+| Pixel Data Bit 1 | D1 | IO5 | IO17 |
+| Pixel Data Bit 2 | D2 | IO18 | IO34 |
+| Pixel Data Bit 3 | D3 | IO19 | IO5 |
+| Pixel Data Bit 4 | D4 | IO36 | IO39 |
+| Pixel Data Bit 5 | D5 | IO39 | IO18 |
+| Pixel Data Bit 6 | D6 | IO34 | IO36 |
+| Pixel Data Bit 7 | D7 | IO35 | IO19 |
 | Camera Reset | RESET | IO2 | IO15 |
 | Camera Power Down | PWDN | *see Note 2* | *see Note 2* |
 | Power Supply 3.3V | 3V3 | 3V3 | 3V3 |
@@ -83,7 +83,7 @@ Specific pins used in this example to connect ESP32 and camera are shown in tabl
 Notes:
 
 1. **Important:** Make the connections short or you are likely to get noisy or even not legible images. More on that is discussed in section [Showcase](#showcase)
-2. **Camera pin** column refers to pinout on OV7725 camera module
+2. **Camera pin** column refers to pinout on OV7670 camera module
 3. **Camera Power Down** pin does not need to be connected to ESP32 GPIO. Instead it may be pulled down to ground with 10 kOhm resistor.
 4. OV7725 supports 10 bit image pixels. In this example the upper 8 bits are processed and saved. The pins corresponding with LSB are marked D0 and D1 and are left not connected.
 
