@@ -115,8 +115,6 @@ void app_main()
     {
         s_pixel_format = PIXFORMAT_RGB565;
         camera_config.frame_size = FRAMESIZE_QVGA;
-        camera_config.jpeg_quality = 12;
-        camera_config.displayBuffer = 320*240*2;
         camera_config.jpeg_quality = 15;
         ESP_LOGI(TAG, "Detected OV7670 camera, using %s bitmap format",
             CAMERA_PIXEL_FORMAT == CAMERA_PF_GRAYSCALE ? "grayscale" : "RGB565");
