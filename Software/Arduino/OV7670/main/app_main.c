@@ -87,7 +87,6 @@ void app_main()
         .pin_sscb_scl = CONFIG_SCL,
         .pin_reset = CONFIG_RESET,
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
-        .displayBuffer = 320 * 240 * 2,
     };
 
     camera_model_t camera_model;
@@ -117,7 +116,8 @@ void app_main()
         s_pixel_format = PIXFORMAT_RGB565;
         camera_config.frame_size = FRAMESIZE_QVGA;
         camera_config.jpeg_quality = 12;
-        camera_config.displayBuffer = 64;
+        camera_config.displayBuffer = 320*240*2;
+        camera_config.jpeg_quality = 15;
         ESP_LOGI(TAG, "Detected OV7670 camera, using %s bitmap format",
             CAMERA_PIXEL_FORMAT == CAMERA_PF_GRAYSCALE ? "grayscale" : "RGB565");
     }
@@ -355,8 +355,8 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = "La baleniera cecoslovacca"/*CONFIG_WIFI_SSID*/,
-            .password = "wpamarchiniwpa"/*CONFIG_WIFI_PASSWORD*/,
+            .ssid = CONFIG_WIFI_SSID,
+            .password = CONFIG_WIFI_PASSWORD,
         },
     };
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));

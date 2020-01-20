@@ -39,13 +39,13 @@
 #include "driver/gpio.h"
 #include "driver/periph_ctrl.h"
 #include "esp_intr_alloc.h"
-#include "esp_heap_alloc_caps.h"
 #include "esp_log.h"
 #include "sensor.h"
 #include "sccb.h"
 #include "wiring.h"
 #include "camera.h"
 #include "camera_common.h"
+#include "framebuffer.h"
 #include "xclk.h"
 #if CONFIG_OV2640_SUPPORT
 #include "ov2640.h"
@@ -138,11 +138,6 @@ esp_err_t reset_pixformat() {
 
   ESP_LOGD(TAG, "Free frame buffer mem / reset RTOS tasks");
 
-  // NOTE: Framebuffer stays!
-  //if (s_state->fb != NULL) {
-  //  free(s_state->fb);
-  //}
-
   if (s_state->data_ready) {
       vQueueDelete(s_state->data_ready);
   }
@@ -223,21 +218,18 @@ esp_err_t camera_probe(const camera_config_t* config, camera_model_t* out_camera
 #if CONFIG_OV2640_SUPPORT
         case OV2640_PID:
             *out_camera_model = CAMERA_OV2640;
-            ESP_LOGD(TAG,"Detected OV2640_PID");
             ov2640_init(&s_state->sensor);
             break;
 #endif
 #if CONFIG_OV7725_SUPPORT
         case OV7725_PID:
             *out_camera_model = CAMERA_OV7725;
-            ESP_LOGD(TAG,"Detected OV7725_PID");
             ov7725_init(&s_state->sensor);
             break;
 #endif
 #if CONFIG_OV7670_SUPPORT
         case OV7670_PID:
             *out_camera_model = CAMERA_OV7670;
-            ESP_LOGD(TAG,"Detected OV7670_PID");
             ov7670_init(&s_state->sensor);
             break;
 #endif
@@ -371,9 +363,9 @@ esp_err_t camera_init(const camera_config_t* config)
       s_state->fb_size = s_state->width * s_state->height * 2;
       s_state->in_bytes_per_pixel = 2;       // camera sends YUV422 (2 bytes)
       s_state->fb_bytes_per_pixel = 2;       // frame buffer stores YUYV
-      s_state->dma_filter = &dma_filter_raw;
+      s_state->dma_filter = ( dma_filter_t ) &dma_filter_raw;
       // TODO: Sampling mode testing - allow configuration..
-      uint8_t highspeed_sampling_mode = 2;
+      uint8_t highspeed_sampling_mode = 0;
 /*
       if (is_hs_mode()) {
         highspeed_sampling_mode = 2;
@@ -448,20 +440,12 @@ esp_err_t camera_init(const camera_config_t* config)
             s_state->width, s_state->height);
 */
 
-    ESP_LOGD(TAG, "Frame buffer (%d bytes)", s_state->fb_size);
-    if (s_state->fb == NULL) {
-      ESP_LOGD(TAG, "Using 32-bit aligned ram shared with display - 320x240x2bpp");
-      int max_fb_size = 320 * 240 * 2;
-      //s_state->width * s_state->height * 2;
-      if (config->displayBuffer == NULL) {
-        ESP_LOGE(TAG, "DisplayBuffer is null!!");
-        err = ESP_ERR_NO_MEM;
-        goto fail;
-      }
-      s_state->fb = (uint32_t*)config->displayBuffer; //(uint8_t*) calloc(max_fb_size, 1);
-      ESP_LOGD(TAG, "Allocated frame buffer (%d bytes)", max_fb_size);
-    }
-    if (s_state->fb == NULL) {
+   ESP_LOGD( TAG, "Allocating frame buffer (%d bytes)", s_state->fb_size );
+
+   // setup segmented framebuffer
+   s_state->fb = ( uint32_t* ) framebuffer_create( s_state->height, s_state->width, s_state->fb_bytes_per_pixel );
+
+   if (s_state->fb == NULL) {
         ESP_LOGE(TAG, "Failed to allocate frame buffer");
         err = ESP_ERR_NO_MEM;
         goto fail;
@@ -515,9 +499,9 @@ esp_err_t camera_init(const camera_config_t* config)
     return ESP_OK;
 
 fail:
+   if( s_state->fb != NULL )
+      framebuffer_free( s_state->fb );
 
-    if (s_state->fb != NULL)
-      free(s_state->fb);
     if (s_state->data_ready) {
         vQueueDelete(s_state->data_ready);
     }
@@ -539,6 +523,7 @@ uint32_t* camera_get_fb()
     }
     return s_state->fb;
 }
+
 
 int camera_get_fb_width()
 {
@@ -589,9 +574,6 @@ esp_err_t camera_run()
     }
     struct timeval tv_start;
     gettimeofday(&tv_start, NULL);
-#ifndef _NDEBUG
-    memset(s_state->fb, 0, s_state->fb_size);
-#endif // _NDEBUG
     i2s_run();
 
     // set
@@ -602,9 +584,6 @@ esp_err_t camera_run()
     gettimeofday(&tv_end, NULL);
     int time_ms = (tv_end.tv_sec - tv_start.tv_sec) * 1000 + (tv_end.tv_usec - tv_start.tv_usec) / 1000;
 
-//    char frame_info_str[40]; //
-//    print_frame_data(frame_info_str);
-//    ESP_LOGI(TAG, "Frame format %s : %d done in %d ms", frame_info_str, s_state->frame_count, time_ms);
     ESP_LOGI(TAG, "Frame %d done in %d ms", s_state->frame_count, time_ms);
 
     s_state->frame_count++;
@@ -879,29 +858,27 @@ static void IRAM_ATTR gpio_isr(void* arg)
 
 static size_t get_fb_pos()
 {
-    return s_state->dma_filtered_count * s_state->width *
-            s_state->fb_bytes_per_pixel / s_state->dma_per_line;
+   return s_state->dma_filtered_count * s_state->width / s_state->dma_per_line;
 }
-
-
 
 static void IRAM_ATTR dma_filter_task(void *pvParameters)
 {
+   fb_context_t fbc_camera;
+
     while (true) {
         size_t buf_idx;
         xQueueReceive(s_state->data_ready, &buf_idx, portMAX_DELAY);
         if (buf_idx == SIZE_MAX) {
-            s_state->data_size = get_fb_pos();
+            s_state->data_size = get_fb_pos() * s_state->fb_bytes_per_pixel;
             xSemaphoreGive(s_state->frame_ready);
             continue;
         }
 
-        //uint8_t* pfb = s_state->fb + get_fb_pos();
-        uint32_t* pfb = s_state->fb + get_fb_pos()/4;
+      uint32_t* pfb = ( uint32_t* ) framebuffer_pos_32( &fbc_camera, get_fb_pos() );
         const dma_elem_t* buf = s_state->dma_buf[buf_idx];
         lldesc_t* desc = &s_state->dma_desc[buf_idx];
-        ESP_LOGV(TAG, "dma_flt: pos=%d ", get_fb_pos()/4);
-        (*s_state->dma_filter)(buf, desc, pfb);
+        ESP_LOGV(TAG, "dma_flt: pos=%d ", get_fb_pos());
+        (*s_state->dma_filter)(buf, desc, ( uint8_t * )pfb);
         s_state->dma_filtered_count++;
         ESP_LOGV(TAG, "dma_flt: flt_count=%d ", s_state->dma_filtered_count);
     }
@@ -1001,56 +978,28 @@ static void IRAM_ATTR dma_filter_raw(const dma_elem_t* src, lldesc_t* dma_desc, 
 
   if (s_state->sampling_mode == SM_0A0B_0C0D) {
   size_t end = dma_desc->length / sizeof(dma_elem_t) / 4;
-  for (size_t i = 0; i < end; ++i) {
+     for (size_t i = 0; i < end; ++i) {
       //dst[0] = pack(0,1,2,3);
       // ie. reverse->
-      dst[0] = pack(src[1].sample1,src[1].sample2,src[0].sample1,src[0].sample2);
-      dst[1] = pack(src[3].sample1,src[3].sample2,src[2].sample1,src[2].sample2);
+         dst[0] = pack( src[0].sample1, src[0].sample2, src[1].sample1, src[1].sample2 );
+         dst[1] = pack( src[2].sample1, src[2].sample2, src[3].sample1, src[3].sample2 );
+
       src += 4;
       dst += 2;
-/*
-      // manually unrolling 4 iterations of the loop here
-      dst[1] = src[0].sample1; // hmmm switch it on em for 00 0c0d?
-      dst[0] = src[0].sample2;
-      dst[3] = src[1].sample1;
-      dst[2] = src[1].sample2;
-      dst[5] = src[2].sample1;
-      dst[4] = src[2].sample2;
-      dst[7] = src[3].sample1;
-      dst[6] = src[3].sample2;
-      src += 4;
-      dst += 8;
-      */
-  }
-} else {
-  assert(s_state->sampling_mode == SM_0A0B_0B0C ||
+     }
+  } else {
+     assert(s_state->sampling_mode == SM_0A0B_0B0C ||
          s_state->sampling_mode == SM_0A00_0B00);
-  size_t end = dma_desc->length / sizeof(dma_elem_t) / 4;
-  // manually unrolling 4 iterations of the loop here
-  for (size_t i = 0; i < end; ++i) {
-    dst[0] = pack(src[3].sample1,src[2].sample1,src[1].sample1,src[0].sample1);
-    src += 4;
-    dst += 1;
-/*
-      dst[0] = src[0].sample1;
-      dst[1] = src[1].sample1;
-      dst[2] = src[2].sample1;
-      dst[3] = src[3].sample1;
-      src += 4;
-      dst += 4;
-*/
+     size_t end = dma_desc->length / sizeof(dma_elem_t) / 4;
+     // manually unrolling 4 iterations of the loop here
+     for (size_t i = 0; i < end; ++i) {
+       dst[0] = pack( src[0].sample1, src[1].sample1, src[2].sample1, src[3].sample1 );
+       src += 4;
+       dst += 1;
+     }
+     // the final sample of a line in SM_0A0B_0B0C sampling mode needs special handling
+     if ((dma_desc->length & 0x7) != 0) {
+        dst[0] = pack( src[0].sample1, src[1].sample1, src[2].sample1, src[2].sample2 );
+     }
   }
-  // the final sample of a line in SM_0A0B_0B0C sampling mode needs special handling
-  if ((dma_desc->length & 0x7) != 0) {
-    dst[0] = pack(src[2].sample2,src[2].sample1,src[1].sample1,src[0].sample1);
-    /*
-      dst[0] = src[0].sample1;
-      dst[1] = src[1].sample1;
-      dst[2] = src[2].sample1;
-      dst[3] = src[2].sample2;
-    */
-  }
-
-
-}
 }
