@@ -54,7 +54,9 @@ static ip4_addr_t s_ip_addr;
 static camera_pixelformat_t s_pixel_format;
 
 #define CAMERA_PIXEL_FORMAT CAMERA_PF_GRAYSCALE
-#define CAMERA_FRAME_SIZE CAMERA_FS_QVGA
+#define CAMERA_FRAME_SIZE CAMERA_FS_VGA /*Set to 640*480*2 = 400KB , it's too much, esp32 has circa 512KiB.
+                                        * A possibility is to use 640*480 with grayscale
+                                        */
 
 void app_main()
 {
@@ -113,8 +115,11 @@ void app_main()
     }
     else if (camera_model == CAMERA_OV7670)
     {
-        s_pixel_format = PIXFORMAT_RGB565;
+        s_pixel_format = CAMERA_PIXEL_FORMAT;
         camera_config.frame_size = FRAMESIZE_QVGA;
+        // https://github.com/igrr/esp32-cam-demo/issues/114 
+        // in order to fix 3 overlays a user suggests to change CAMERA_FRAME_SIZE to FRAMESIZE_QQVGA
+        // I suppose that 3 overlays is caused by RGB
         camera_config.jpeg_quality = 15;
         ESP_LOGI(TAG, "Detected OV7670 camera, using %s bitmap format",
             CAMERA_PIXEL_FORMAT == CAMERA_PF_GRAYSCALE ? "grayscale" : "RGB565");
