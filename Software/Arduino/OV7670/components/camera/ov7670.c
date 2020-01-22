@@ -132,8 +132,8 @@ static const uint8_t default_regs[][2] = {
 static const uint8_t VGA_regs[][2] = {
 	{COM3, 0x00},
 	{COM14, 0x00},
-	{SCALING_XSC, 0x3A},
-	{SCALING_YSC, 0x35},
+	//{SCALING_XSC, 0x3A},
+	//{SCALING_YSC, 0x35},
 	{SCALING_DCWCTR, 0x11},
 	{SCALING_PCLK_DIV, 0xF0},
 	{SCALING_PCLK_DELAY, 0x02}
@@ -141,9 +141,9 @@ static const uint8_t VGA_regs[][2] = {
 
 static const uint8_t QVGA_regs[][2] = {
 	{COM3, 0x04},
-	{COM14, 0x19},
-	{SCALING_XSC, 0x3A},
-	{SCALING_YSC, 0x35},
+	//{COM14, 0x19},       -> this one enable clk divider by 2 and manual scaling, I suppose that was used in order to divide 24MHz clk to 12MHz
+	//{SCALING_XSC, 0x3A}, -> not write in the correct way
+	//{SCALING_YSC, 0x35}, -> not needed, it's self calculated by OV7670
 	{SCALING_DCWCTR, 0x11},
 	{SCALING_PCLK_DIV, 0xF1},
 	{SCALING_PCLK_DELAY, 0x02}
@@ -152,8 +152,8 @@ static const uint8_t QVGA_regs[][2] = {
 static const uint8_t QQVGA_regs[][2] = {
 	{COM3, 0x04},
 	{COM14, 0x1A},
-	{SCALING_XSC, 0x3A},
-	{SCALING_YSC, 0x35},
+	//{SCALING_XSC, 0x3A},
+	//{SCALING_YSC, 0x35},
 	{SCALING_DCWCTR, 0x22},
 	{SCALING_PCLK_DIV, 0xF2},
 	{SCALING_PCLK_DELAY, 0x02}
@@ -837,6 +837,12 @@ static int set_framesize(sensor_t *sensor, framesize_t framesize)
 			{
 				ret |= SCCB_Write(sensor->slv_addr, regs[i][0], regs[i][1]);
 			}
+      //Additional reg, enable standard Output format
+      //This is found on COM7 that is used also for RGB565 settings
+      //We set only the right bit (0x10)
+      uint8_t reg = SCCB_Read(sensor->slv_addr, COM7);
+      reg = reg | 0x10;
+      ret |= SCCB_Write(sensor->slv_addr, COM7 , reg);
 			break;
 		case FRAMESIZE_QQVGA:
 			for (i=0, regs = QQVGA_regs; regs[i][0]; i++)
@@ -859,6 +865,8 @@ static int set_framerate(sensor_t *sensor, framerate_t framerate)
   if (framerate == 1) OV7670_FrameRateAdjustment(sensor,&OV7670_15FPS_12MHZ_XCLK);
   if (framerate == 2) OV7670_FrameRateAdjustment(sensor,&OV7670_25FPS_12MHZ_XCLK);
   if (framerate == 3) OV7670_FrameRateAdjustment(sensor,&OV7670_30FPS_12MHZ_XCLK);
+  //
+  if (framerate == 4) OV7670_FrameRateAdjustment(sensor,&OV7670_30FPS_24MHZ_XCLK);
 
   return 0;
 

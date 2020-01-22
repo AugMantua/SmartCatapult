@@ -96,9 +96,9 @@ static esp_err_t dma_desc_init();
 static void dma_desc_deinit();
 static void dma_filter_task(void *pvParameters);
 
-//static void dma_filter_grayscale(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t* dst);
-//static void dma_filter_grayscale_highspeed(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t* dst);
-//static void dma_filter_jpeg(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t* dst);
+static void dma_filter_grayscale(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t* dst);
+static void dma_filter_grayscale_highspeed(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t* dst);
+static void dma_filter_jpeg(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t* dst);
 static void dma_filter_raw(const dma_elem_t *src, lldesc_t *dma_desc, uint32_t *dst);
 
 static void i2s_stop();
@@ -359,7 +359,7 @@ esp_err_t camera_init(const camera_config_t *config)
 
     if (pix_format == PIXFORMAT_RGB565)
     {
-        s_state->sensor.set_framerate(&s_state->sensor, 0); // lowest fps first...
+        s_state->sensor.set_framerate(&s_state->sensor, 4); // K1008014 -> 30 fps 24MHz
         ESP_LOGD(TAG, "Setting framerate to 0 for PIXFORMAT_RGB565");
     }
 
@@ -382,7 +382,7 @@ esp_err_t camera_init(const camera_config_t *config)
         s_state->fb_bytes_per_pixel = 2; // frame buffer stores YUYV
         s_state->dma_filter = (dma_filter_t)&dma_filter_raw;
         // TODO: Sampling mode testing - allow configuration..
-        uint8_t highspeed_sampling_mode = 0;
+        uint8_t highspeed_sampling_mode = 2;
         /*
       if (is_hs_mode()) {
         highspeed_sampling_mode = 2;
