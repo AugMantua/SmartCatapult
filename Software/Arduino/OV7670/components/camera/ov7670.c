@@ -929,6 +929,7 @@ static int set_framesize(sensor_t *sensor, framesize_t framesize)
     return -1;
   }
   return ret;
+
 }
 
 static int set_framerate(sensor_t *sensor, framerate_t framerate)
