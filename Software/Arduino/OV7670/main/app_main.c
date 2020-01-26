@@ -54,7 +54,7 @@ static ip4_addr_t s_ip_addr;
 static camera_pixelformat_t s_pixel_format;
 
 #define CAMERA_PIXEL_FORMAT CAMERA_PF_RGB565
-#define CAMERA_FRAME_SIZE FRAMESIZE_QVGA 
+#define CAMERA_FRAME_SIZE CAMERA_FS_QVGA
 
 void app_main()
 {
@@ -115,9 +115,6 @@ void app_main()
     {
         s_pixel_format = CAMERA_PIXEL_FORMAT;
         camera_config.frame_size = CAMERA_FRAME_SIZE;
-        // https://github.com/igrr/esp32-cam-demo/issues/114 
-        // in order to fix 3 overlays a user suggests to change CAMERA_FRAME_SIZE to FRAMESIZE_QQVGA
-        // I suppose that 3 overlays is caused by RGB
         camera_config.jpeg_quality = 15;
         ESP_LOGI(TAG, "Detected OV7670 camera, using %s bitmap format",
             CAMERA_PIXEL_FORMAT == CAMERA_PF_GRAYSCALE ? "grayscale" : "RGB565");
@@ -212,7 +209,8 @@ static void handle_rgb_bmp(http_context_t http_ctx, void *ctx)
         return;
     }
 
-    bitmap_header_t *header = bmp_create_header(camera_get_fb_width(), camera_get_fb_height());
+    ESP_LOGI(TAG,"width : %3d , height : %3d", camera_get_fb_width(), camera_get_fb_height());
+    bitmap_header_t *header = bmp_create_header_generic(camera_get_fb_width(), camera_get_fb_height(),16);
     if (header == NULL)
     {
         return;
@@ -228,6 +226,8 @@ static void handle_rgb_bmp(http_context_t http_ctx, void *ctx)
 
     write_frame(http_ctx);
     http_response_end(http_ctx);
+
+
 }
 
 static void handle_jpg(http_context_t http_ctx, void *ctx)
@@ -248,7 +248,7 @@ static void handle_jpg(http_context_t http_ctx, void *ctx)
 static void handle_rgb_bmp_stream(http_context_t http_ctx, void *ctx)
 {
     http_response_begin(http_ctx, 200, STREAM_CONTENT_TYPE, HTTP_RESPONSE_SIZE_UNKNOWN);
-    bitmap_header_t *header = bmp_create_header(camera_get_fb_width(), camera_get_fb_height());
+    bitmap_header_t *header = bmp_create_header_generic(camera_get_fb_width(), camera_get_fb_height(),16);
     if (header == NULL)
     {
         return;

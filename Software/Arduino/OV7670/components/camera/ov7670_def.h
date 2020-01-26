@@ -360,6 +360,24 @@
    
 #define OV7670_THL_ST_REG               0xb3    ///< ABLC target
  
+static const uint8_t rgb565_ov7670[][2] = {
+	{COM7, 0x04}, /* Selects RGB mode */
+	{RGB444, 0},	  /* No RGB444 please */
+	{COM1, 0x0},
+	{COM15, 0x10|0xc0},
+	{COM9, 0x6A},	 /* 128x gain ceiling; 0x8 is reserved bit */
+	{0x4f, 0xb3},		 /* "matrix coefficient 1" */
+	{0x50, 0xb3},		 /* "matrix coefficient 2" */
+	{0x51, 0},		 /* vb */
+	{0x52, 0x3d},		 /* "matrix coefficient 4" */
+	{0x53, 0xa7},		 /* "matrix coefficient 5" */
+	{0x54, 0xe4},		 /* "matrix coefficient 6" */
+	{COM13, /*COM13_GAMMA|*/0x40},
+	{0xff, 0xff},	/* END MARKER */
+};
+
+
+
 #if defined(__cplusplus)
 }
 #endif

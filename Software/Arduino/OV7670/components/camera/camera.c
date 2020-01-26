@@ -96,9 +96,10 @@ static esp_err_t dma_desc_init();
 static void dma_desc_deinit();
 static void dma_filter_task(void *pvParameters);
 
-static void dma_filter_grayscale(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t* dst);
-static void dma_filter_grayscale_highspeed(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t* dst);
-static void dma_filter_jpeg(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t* dst);
+
+//static void dma_filter_grayscale(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t* dst);
+//static void dma_filter_grayscale_highspeed(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t* dst);
+//static void dma_filter_jpeg(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t* dst);
 static void dma_filter_raw(const dma_elem_t *src, lldesc_t *dma_desc, uint32_t *dst);
 
 static void i2s_stop();
@@ -359,7 +360,7 @@ esp_err_t camera_init(const camera_config_t *config)
 
     if (pix_format == PIXFORMAT_RGB565)
     {
-        s_state->sensor.set_framerate(&s_state->sensor, 4); // K1008014 -> 30 fps 24MHz
+        s_state->sensor.set_framerate(&s_state->sensor, 0); // lowest fps first...
         ESP_LOGD(TAG, "Setting framerate to 0 for PIXFORMAT_RGB565");
     }
 
@@ -382,7 +383,7 @@ esp_err_t camera_init(const camera_config_t *config)
         s_state->fb_bytes_per_pixel = 2; // frame buffer stores YUYV
         s_state->dma_filter = (dma_filter_t)&dma_filter_raw;
         // TODO: Sampling mode testing - allow configuration..
-        uint8_t highspeed_sampling_mode = 2;
+        uint8_t highspeed_sampling_mode = 0;
         /*
       if (is_hs_mode()) {
         highspeed_sampling_mode = 2;
@@ -403,13 +404,11 @@ esp_err_t camera_init(const camera_config_t *config)
             ESP_LOGD(TAG, "Sampling mode SM_0A00_0B00 (2)");
             s_state->sampling_mode = SM_0A00_0B00; //highspeed
         }
-    }/*K1008014 -> To try , the whole "else if" was disabled in code,
-      *             we need it in order to use grayscale(decrease buffer in ram).
-      */
-    else if (pix_format == PIXFORMAT_GRAYSCALE)
-    {
-        if ((s_state->sensor.id.PID != OV7725_PID) && (s_state->sensor.id.PID != OV7670_PID))
-        {
+    }
+    /*
+     else if (pix_format == PIXFORMAT_GRAYSCALE) {
+      if ((s_state->sensor.id.PID != OV7725_PID) && (s_state->sensor.id.PID != OV7670_PID)) {
+
             ESP_LOGE(TAG, "Grayscale format is only supported for ov7225 and ov7670");
             err = ESP_ERR_NOT_SUPPORTED;
             goto fail;
@@ -466,6 +465,7 @@ esp_err_t camera_init(const camera_config_t *config)
         s_state->in_bytes_per_pixel = 2;
         s_state->fb_bytes_per_pixel = 2;
     }
+*/
     else
     {
         ESP_LOGE(TAG, "Requested format is not supported");
@@ -1056,10 +1056,9 @@ static void IRAM_ATTR dma_filter_raw(const dma_elem_t *src, lldesc_t *dma_desc, 
         for (size_t i = 0; i < end; ++i)
         {
             //dst[0] = pack(0,1,2,3);
-            // ie. reverse->
-            dst[0] = pack(src[0].sample1, src[0].sample2, src[1].sample1, src[1].sample2);
-            dst[1] = pack(src[2].sample1, src[2].sample2, src[3].sample1, src[3].sample2);
-
+            //camera is little endian, we take values to big endian
+            dst[0] = pack(src[0].sample2, src[0].sample1, src[1].sample2, src[1].sample1);
+            dst[1] = pack(src[2].sample2, src[2].sample1, src[3].sample2, src[3].sample1);
             src += 4;
             dst += 2;
         }
