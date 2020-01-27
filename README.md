@@ -26,5 +26,4 @@ https://www.maxbotix.com/Ultrasonic_Sensors.htm
 
 ********Cosa manca?
 
-1) Celle di carico
-2) Corrente utilizzata massima dai servo
+1) Corrente utilizzata massima dai servo
