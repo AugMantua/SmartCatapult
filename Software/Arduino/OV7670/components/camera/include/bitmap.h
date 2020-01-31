@@ -23,7 +23,9 @@
 
 //RGB Bitmasks
 static const uint32_t bits555[] = {0x007C00,0x0003E0,0x00001F};
-static const uint32_t bits565[] = {0x00F800, 0x0007E0, 0x00001F};
+//static const uint32_t bits565[] = {0x00F800, 0x0007E0, 0x00001F}; original one
+//inverted order
+static const uint32_t bits565[] = {0x0007E0, 0x00001F, 0x00F800};
 static const uint32_t bits888[] = {0xFF0000, 0x00FF00, 0x0000FF};
 
 typedef struct __attribute__((packed, aligned(1)))
@@ -58,5 +60,5 @@ typedef struct
 } bitmap_header_t;
 
 bitmap_header_t *bmp_create_header(int w, int h);
-bitmap_header_t *bmp_create_header_generic(int w, int h, int bitsperpixel);
+bitmap_header_t *bmp_create_header_bi_bitfields(int w, int h, int bitsperpixel);
 #endif

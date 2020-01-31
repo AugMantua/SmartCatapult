@@ -210,7 +210,7 @@ static void handle_rgb_bmp(http_context_t http_ctx, void *ctx)
     }
 
     ESP_LOGI(TAG,"width : %3d , height : %3d", camera_get_fb_width(), camera_get_fb_height());
-    bitmap_header_t *header = bmp_create_header_generic(camera_get_fb_width(), camera_get_fb_height(),16);
+    bitmap_header_t *header = bmp_create_header_bi_bitfields(camera_get_fb_width(), camera_get_fb_height(),16);
     if (header == NULL)
     {
         return;
@@ -248,7 +248,7 @@ static void handle_jpg(http_context_t http_ctx, void *ctx)
 static void handle_rgb_bmp_stream(http_context_t http_ctx, void *ctx)
 {
     http_response_begin(http_ctx, 200, STREAM_CONTENT_TYPE, HTTP_RESPONSE_SIZE_UNKNOWN);
-    bitmap_header_t *header = bmp_create_header_generic(camera_get_fb_width(), camera_get_fb_height(),16);
+    bitmap_header_t *header = bmp_create_header_bi_bitfields(camera_get_fb_width(), camera_get_fb_height(),16);
     if (header == NULL)
     {
         return;

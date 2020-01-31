@@ -2,6 +2,7 @@
     "files.associations": {
         "ov7670.h": "c",
         "camera.h": "c",
-        "sensor.h": "c"
+        "sensor.h": "c",
+        "wiring.h": "c"
     }
 }

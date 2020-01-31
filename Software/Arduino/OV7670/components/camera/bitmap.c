@@ -26,7 +26,7 @@ bitmap_header_t *bmp_create_header(int w, int h)
 }
 
 
-bitmap_header_t *bmp_create_header_generic(int w, int h, int bitsPerPixel)
+bitmap_header_t *bmp_create_header_bi_bitfields(int w, int h, int bitsPerPixel)
 {
 	bitmap_header_t *pbitmap  = (bitmap_header_t*)calloc(1, sizeof(bitmap_header_t));
 	int _pixelbytesize = w * h * bitsPerPixel/8;
