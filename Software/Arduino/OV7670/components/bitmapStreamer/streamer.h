@@ -88,7 +88,7 @@ typedef struct
  * 
  * @param stream Streamer struture, all the logic into one place
 */
-esp_err_t streamer_init(streamer stream);
+esp_err_t streamer_init(struct streamer* stream);
 
 /**
  * @brief TCP send of bitmap stream
@@ -97,4 +97,4 @@ esp_err_t streamer_init(streamer stream);
  * 
  * @param stream Streamer struture, all the logic into one place
  */
-esp_err_t streamer_send(streamer stream);
+esp_err_t streamer_send(struct streamer* stream);
