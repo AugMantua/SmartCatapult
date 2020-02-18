@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include "streamer.h"
 
-static const char *TAG = "TCP Streamer";
+static const char *TAG = "TCP Bitmap Streamer";
 
 esp_err_t streamer_init(struct streamer *stream)
 {
@@ -65,13 +65,9 @@ esp_err_t streamer_send(struct streamer *stream)
     {
         return ESP_ERR_STREAM_HEADER_ERROR;
     }
-    //K1008014 WIP - Inseire generazione pacchetto per il send
-    //puntatori a head bitmpa, dati da camera e header pacchetto per puntamento
+    //Verificare cosa viene inviato puntando una struttura contenente puntatori ai buffer
     int err = send(stream->sock, &stream->packet, stream->packet.sizeofPacket, 0);
-    //send qui da sistemare, l'invio dovrà contenere :
-    // Header del pacchetto
-    // Header del bitmap (rgb656 header)
-    // Frame data (rgb565)
+
     if (err < 0)
     {
         ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
@@ -81,3 +77,22 @@ esp_err_t streamer_send(struct streamer *stream)
     }
     return ESP_OK;
 }
+
+esp_err_t streamer_prepare_packet_data(struct streamer *stream, void* data, void* bitmap, uint32_t sizeOfData, uint32_t sizeOfHeader )
+{
+    if(data == NULL || bitmap == NULL)
+    {
+        return ESP_ERR_STREAM_BUFFER_ERROR;
+    }
+    /*FrameData*/
+    stream->packet.data.bufferPointer = data;
+    stream->packet.data.sizeofBuffer  = sizeOfData;
+    /*BitmapHeader*/
+    stream->packet.data.bitmapHeader  = bitmap;
+    stream->packet.data.sizeofHeader  = sizeOfHeader;
+
+    return ESP_OK;
+}
+
+
+

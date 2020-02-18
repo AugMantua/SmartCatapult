@@ -77,18 +77,18 @@ extern "C"
  */
     struct streamerPacketData
     {
-        struct bitmapinfoheader *bitmapHeader;
-        uint32_t *bufferPointer;
+        void      *bitmapHeader;
+        void      *bufferPointer;
         uint32_t  sizeofBuffer;
+        uint32_t  sizeofHeader;
     } ;
 
  /**
  * 
- * header structure definition
- * this header must contain timing information of the bitmap
- * master will reply to the stream with position of the target if found
- * and time of the original frame in order to understand in case speed/acceleration ecc
- * If there is a target into the frame master will set targetInFrame and give % of confident
+ * Packet 
+ * contains header, data and total size
+ * where total size is header size + data size(where data size is bitmap header + frame data)
+ * 
  */
     struct streamerPacket
     {
@@ -119,7 +119,7 @@ extern "C"
  * 
  * @return ESP_OK on success
  * 
- * @param stream Streamer struture, all the logic into one place
+ * @param stream Streamer structure, all the logic into one place
 */
     esp_err_t streamer_init(struct streamer *stream);
 
@@ -128,7 +128,7 @@ extern "C"
  * 
  * @return ESP_OK on success
  * 
- * @param stream Streamer struture, all the logic into one place
+ * @param stream Streamer structure, all the logic into one place
  */
     esp_err_t streamer_send(struct streamer *stream);
 
@@ -137,9 +137,11 @@ extern "C"
  * 
  * @return ESP_OK on success
  * 
- * @param stream Streamer struture, all the logic into one place
+ * @param stream Streamer structure, all the logic into one place
  */
-    esp_err_t streamer_prepare_frame_data(struct streamer *stream);
+    esp_err_t streamer_prepare_frame_data(struct streamer *stream, void* data, void* bitmapHeader, uint32_t sizeOfData, uint32_t sizeOfHeader);
+
+
 
 #ifdef __cplusplus
 }

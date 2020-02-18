@@ -12,6 +12,11 @@
         "opt.h": "c",
         "lwipopts.h": "c",
         "errno.h": "c",
-        "*.ipp": "c"
+        "*.ipp": "c",
+        "array": "c",
+        "vector": "c",
+        "xstring": "c",
+        "string": "c",
+        "string_view": "c"
     }
 }
