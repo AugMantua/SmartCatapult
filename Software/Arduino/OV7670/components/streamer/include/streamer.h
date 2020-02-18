@@ -28,6 +28,8 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
+#include <bitmap.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -50,26 +52,9 @@ extern "C"
 #define CONFIG_STREAM_PORT 8585
 #endif
 
-    /*
-* defines a struct in order to have only one object
-*/
-    struct streamer
-    {
-        bool                init_done;
-        bool                connection_error;
-        bool                connected;
-        uint32_t            *bufferPointer;
-        bool                pointerDefined;
-        struct sockaddr_in  socketAddress;
-        struct streamHeader header;
-        int                 sock;
-        char                rx_buffer[128];
-        char                addr_str[128];
-        int                 addr_family;
-        int                 ip_protocol;
-    } ;
 
-    /**
+
+ /**
  * 
  * header structure definition
  * this header must contain timing information of the bitmap
@@ -77,14 +62,57 @@ extern "C"
  * and time of the original frame in order to understand in case speed/acceleration ecc
  * If there is a target into the frame master will set targetInFrame and give % of confident
  */
-    typedef struct
+    struct streamerPacketHeader
     {
         uint32_t counter;
         uint32_t frameTick;
         bool targetInFrame;
         uint32_t targetConfident;
         uint32_t frameSize;
-    } streamHeader;
+    } ;
+
+ /**
+ * Packet data
+ * contains the pointer to the buffer and the size of the frame + rgb565 header
+ */
+    struct streamerPacketData
+    {
+        struct bitmapinfoheader *bitmapHeader;
+        uint32_t *bufferPointer;
+        uint32_t  sizeofBuffer;
+    } ;
+
+ /**
+ * 
+ * header structure definition
+ * this header must contain timing information of the bitmap
+ * master will reply to the stream with position of the target if found
+ * and time of the original frame in order to understand in case speed/acceleration ecc
+ * If there is a target into the frame master will set targetInFrame and give % of confident
+ */
+    struct streamerPacket
+    {
+        struct streamerPacketHeader header;
+        struct streamerPacketData   data;
+        uint32_t sizeofPacket;
+    } ;
+
+/*
+* defines a struct in order to have only one object
+*/
+    struct streamer
+    {
+        bool                  init_done;
+        bool                  connection_error;
+        bool                  connected;
+        bool                  pointerDefined;
+        struct sockaddr_in    socketAddress;
+        struct streamerPacket packet;
+        int                   sock;
+        char                  addr_str[128];
+        int                   addr_family;
+        int                   ip_protocol;
+    } ;
 
 /**
  * @brief Init the streamer, prepares the semaphore and prepare the socket
@@ -95,7 +123,7 @@ extern "C"
 */
     esp_err_t streamer_init(struct streamer *stream);
 
-    /**
+/**
  * @brief TCP send of bitmap stream
  * 
  * @return ESP_OK on success
@@ -103,6 +131,15 @@ extern "C"
  * @param stream Streamer struture, all the logic into one place
  */
     esp_err_t streamer_send(struct streamer *stream);
+
+/**
+ * @brief Prepares data to be send
+ * 
+ * @return ESP_OK on success
+ * 
+ * @param stream Streamer struture, all the logic into one place
+ */
+    esp_err_t streamer_prepare_frame_data(struct streamer *stream);
 
 #ifdef __cplusplus
 }

@@ -61,11 +61,17 @@ esp_err_t streamer_init(struct streamer *stream)
 
 esp_err_t streamer_send(struct streamer *stream)
 {
-    if (stream->header.counter == 0 || stream->header.frameTick == 0 || stream->header.frameSize == 0)
+    if (stream->packet.header.counter == 0 || stream->packet.header.frameTick == 0 || stream->packet.header.frameSize == 0)
     {
         return ESP_ERR_STREAM_HEADER_ERROR;
     }
-    int err = send(stream->sock, stream->bufferPointer, sizeof(stream->bufferPointer), 0);
+    //K1008014 WIP - Inseire generazione pacchetto per il send
+    //puntatori a head bitmpa, dati da camera e header pacchetto per puntamento
+    int err = send(stream->sock, &stream->packet, stream->packet.sizeofPacket, 0);
+    //send qui da sistemare, l'invio dovrà contenere :
+    // Header del pacchetto
+    // Header del bitmap (rgb656 header)
+    // Frame data (rgb565)
     if (err < 0)
     {
         ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
