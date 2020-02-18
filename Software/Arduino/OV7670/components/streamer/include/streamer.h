@@ -33,6 +33,14 @@ extern "C"
 {
 #endif
 
+#define ESP_ERR_STREAM_BASE 0x30000
+#define ESP_ERR_STREAM_SOCKET_ERROR      (ESP_ERR_STREAM_BASE + 1)
+#define ESP_ERR_STREAM_SEMAPHORE_ERROR   (ESP_ERR_STREAM_BASE + 2)
+#define ESP_ERR_STREAM_BUFFER_ERROR      (ESP_ERR_STREAM_BASE + 3)
+#define ESP_ERR_STREAM_ALREADY_INIT      (ESP_ERR_STREAM_BASE + 4)
+#define ESP_ERR_STREAM_FUN_NOT_IMPLEM    (ESP_ERR_STREAM_BASE + 5)
+#define ESP_ERR_STREAM_HEADER_ERROR      (ESP_ERR_STREAM_BASE + 6)
+
 
 #ifndef HOST_IP_ADDR
 #define HOST_IP_ADDR "192.168.0.1"
@@ -77,14 +85,6 @@ extern "C"
         uint32_t targetConfident;
         uint32_t frameSize;
     } streamHeader;
-
-#define ESP_ERR_STREAM_BASE 0x30000
-#define ESP_ERR_STREAM_SOCKET_ERROR      (ESP_ERR_STREAM_BASE + 1)
-#define ESP_ERR_STREAM_SEMAPHORE_ERROR   (ESP_ERR_STREAM_BASE + 2)
-#define ESP_ERR_STREAM_BUFFER_ERROR      (ESP_ERR_STREAM_BASE + 3)
-#define ESP_ERR_STREAM_ALREADY_INIT      (ESP_ERR_STREAM_BASE + 4)
-#define ESP_ERR_STREAM_FUN_NOT_IMPLEM    (ESP_ERR_STREAM_BASE + 5)
-#define ESP_ERR_STREAM_HEADER_ERROR      (ESP_ERR_STREAM_BASE + 6)
 
 /**
  * @brief Init the streamer, prepares the semaphore and prepare the socket
