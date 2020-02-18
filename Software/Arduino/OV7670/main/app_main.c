@@ -33,6 +33,8 @@
 #include "bitmap.h"
 #include "http_server.h"
 
+#include "streamer.h"
+
 static void handle_grayscale_pgm(http_context_t http_ctx, void *ctx);
 static void handle_rgb_bmp(http_context_t http_ctx, void *ctx);
 static void handle_rgb_bmp_stream(http_context_t http_ctx, void *ctx);

@@ -21,50 +21,47 @@
 #include "esp_intr_alloc.h"
 #include "esp_log.h"
 #include "camera.h"
-#include "esp_netif.h"
-
+#include "esp_err.h"
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
-
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-#define ESP_ERR_BITMAP_STREAM 0x30000
-#define ESP_ERR_BITMAP_STREAM_SOCKET_ERROR      (ESP_ERR_BITMAP_STREAM + 1)
-#define ESP_ERR_BITMAP_STREAM_SEMAPHORE_ERROR   (ESP_ERR_BITMAP_STREAM + 2)
-#define ESP_ERR_BITMAP_STREAM_BUFFER_ERROR      (ESP_ERR_BITMAP_STREAM + 3)
-#define ESP_ERR_BITMAP_STREAM_ALREADY_INIT      (ESP_ERR_BITMAP_STREAM + 4)
-#define ESP_ERR_BITMAP_STREAM_FUN_NOT_IMPLEM    (ESP_ERR_BITMAP_STREAM + 5)
 
+#ifndef HOST_IP_ADDR
+#define HOST_IP_ADDR "192.168.0.1"
+#endif
 /*Standard TCP port for the streaming*/
 #ifndef CONFIG_STREAM_PORT
-    #define CONFIG_STREAM_PORT 8585
+#define CONFIG_STREAM_PORT 8585
 #endif
 
-/*
+    /*
 * defines a struct in order to have only one object
-* defines also pointers to function
 */
-typedef struct{
-    bool            init_done;
-    void*           streamer_init(streamer);
-    void*           sendPacket(streamer);
-    uint32_t*       bufferPointer;
-    bool            pointerDefined;
-    sockaddr_in*    socketAddress;
-    int             socket;  
-    char            rx_buffer[128];
-    char            addr_str[128];
-    int             addr_family;
-    int             ip_protocol;   
-} streamer;
+    struct streamer
+    {
+        bool                init_done;
+        bool                connection_error;
+        bool                connected;
+        uint32_t            *bufferPointer;
+        bool                pointerDefined;
+        struct sockaddr_in  socketAddress;
+        struct streamHeader header;
+        int                 sock;
+        char                rx_buffer[128];
+        char                addr_str[128];
+        int                 addr_family;
+        int                 ip_protocol;
+    } ;
 
-/**
+    /**
  * 
  * header structure definition
  * this header must contain timing information of the bitmap
@@ -72,14 +69,22 @@ typedef struct{
  * and time of the original frame in order to understand in case speed/acceleration ecc
  * If there is a target into the frame master will set targetInFrame and give % of confident
  */
-typedef struct 
-{
-    uint32_t counter;
-    uint32_t frameTick;
-    bool     targetInFrame;
-    uint32_t targetConfident;
-} streamHeader;
+    typedef struct
+    {
+        uint32_t counter;
+        uint32_t frameTick;
+        bool targetInFrame;
+        uint32_t targetConfident;
+        uint32_t frameSize;
+    } streamHeader;
 
+#define ESP_ERR_STREAM_BASE 0x30000
+#define ESP_ERR_STREAM_SOCKET_ERROR      (ESP_ERR_STREAM_BASE + 1)
+#define ESP_ERR_STREAM_SEMAPHORE_ERROR   (ESP_ERR_STREAM_BASE + 2)
+#define ESP_ERR_STREAM_BUFFER_ERROR      (ESP_ERR_STREAM_BASE + 3)
+#define ESP_ERR_STREAM_ALREADY_INIT      (ESP_ERR_STREAM_BASE + 4)
+#define ESP_ERR_STREAM_FUN_NOT_IMPLEM    (ESP_ERR_STREAM_BASE + 5)
+#define ESP_ERR_STREAM_HEADER_ERROR      (ESP_ERR_STREAM_BASE + 6)
 
 /**
  * @brief Init the streamer, prepares the semaphore and prepare the socket
@@ -88,13 +93,17 @@ typedef struct
  * 
  * @param stream Streamer struture, all the logic into one place
 */
-esp_err_t streamer_init(struct streamer* stream);
+    esp_err_t streamer_init(struct streamer *stream);
 
-/**
+    /**
  * @brief TCP send of bitmap stream
  * 
  * @return ESP_OK on success
  * 
  * @param stream Streamer struture, all the logic into one place
  */
-esp_err_t streamer_send(struct streamer* stream);
+    esp_err_t streamer_send(struct streamer *stream);
+
+#ifdef __cplusplus
+}
+#endif

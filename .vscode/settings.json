@@ -3,6 +3,15 @@
         "ov7670.h": "c",
         "camera.h": "c",
         "sensor.h": "c",
-        "wiring.h": "c"
+        "wiring.h": "c",
+        "streamer.h": "c",
+        "esp_intr_alloc.h": "c",
+        "freertos.h": "c",
+        "semphr.h": "c",
+        "sockets.h": "c",
+        "opt.h": "c",
+        "lwipopts.h": "c",
+        "errno.h": "c",
+        "*.ipp": "c"
     }
 }
