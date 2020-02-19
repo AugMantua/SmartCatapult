@@ -69,6 +69,9 @@ extern "C"
         bool targetInFrame;
         uint32_t targetConfident;
         uint32_t frameSize;
+        //
+        uint32_t  sizeofBuffer;
+        uint32_t  sizeofBitmapHeader;
     } ;
 
  /**
@@ -79,8 +82,6 @@ extern "C"
     {
         void      *bitmapHeader;
         void      *bufferPointer;
-        uint32_t  sizeofBuffer;
-        uint32_t  sizeofHeader;
     } ;
 
  /**

@@ -88,8 +88,8 @@ esp_err_t streamer_prepare_packet_data(struct streamer *stream, void* data, void
     stream->packet.data.bufferPointer = data;
     stream->packet.data.sizeofBuffer  = sizeOfData;
     /*BitmapHeader*/
-    stream->packet.data.bitmapHeader  = bitmap;
-    stream->packet.data.sizeofHeader  = sizeOfHeader;
+    stream->packet.header.bitmapHeader        = bitmap;
+    stream->packet.header.sizeofBitmapHeader  = sizeOfHeader;
 
     return ESP_OK;
 }
