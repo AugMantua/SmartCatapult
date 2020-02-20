@@ -25,6 +25,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
         private IPEndPoint localEndPoint;
         private bool isListenerSet;
         private Socket handler;
+        private bool isBoundToNode;
 
 
         public server()
@@ -43,7 +44,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
             // Dns.GetHostName returns the name of the 
             // host running the application.
             ipHostInfo = Dns.Resolve(Dns.GetHostName());
-            ipAddress = ipHostInfo.AddressList[0];
+            ipAddress = ipHostInfo.AddressList[2];
             localEndPoint = new IPEndPoint(ipAddress, 11000);
 
             // Create a TCP/IP socket.
@@ -72,21 +73,36 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
             }
             Console.WriteLine("Waiting for a connection on ip = {0}", ipAddress);
             // Program is suspended while waiting for an incoming connection.
-            this.handler = listener.Accept();
+            if (isBoundToNode)
+            {
+                if (!handler.Connected)
+                {
+                    this.handler = listener.Accept();
+                    this.isBoundToNode = true;
+                }
+            }
+            else
+            {
+                this.handler = listener.Accept();
+                this.isBoundToNode = true;
+            }
+
+                
             data = null;
 
             // An incoming connection needs to be processed.
             while (true)
             {
-                bytes = new byte[1024];
+                bytes = new byte[4096];
                 int bytesRec = handler.Receive(bytes);
                 data += Encoding.ASCII.GetString(bytes, 0, bytesRec);
-                if (data.IndexOf("<$>") > -1 || bytesRec.Equals(0))
+                if (data.IndexOf("<$>EOF<$>") > -1 || bytesRec.Equals(0))
                 {
                     break;
                 }
             }
-            data = data.Replace("<$>", "");
+            data = data.Replace("<$>EOF<$>", "");
+            Console.WriteLine(data.Length);
             return data;
         }
 

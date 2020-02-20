@@ -61,12 +61,25 @@ esp_err_t streamer_init(struct streamer *stream)
 
 esp_err_t streamer_send(struct streamer *stream)
 {
-    if (stream->packet.header.counter == 0 || stream->packet.header.frameTick == 0 || stream->packet.header.frameSize == 0)
+    char buffer[512];
+    if (stream->packet.header.counter == 0 || stream->packet.header.frameTick == 0 )
     {
         return ESP_ERR_STREAM_HEADER_ERROR;
     }
-    //Verificare cosa viene inviato puntando una struttura contenente puntatori ai buffer
-    int err = send(stream->sock, &stream->packet, stream->packet.sizeofPacket, 0);
+    ESP_LOGI(TAG, "Sending packet to target");
+    int err = 0;
+    /*Provo a inviare a pezzi*/
+    //Invio Header pacchetto
+    ESP_LOGI(TAG, "Packet dimensions : dataHeaderBitmap = %d, data = %d", stream->packet.header.sizeofBitmapHeader, stream->packet.header.sizeofBuffer);
+    err = send(stream->sock, &stream->packet.header, sizeof(stream->packet.header), 0);
+    //Invio bitmapHeader
+    err = send(stream->sock, stream->packet.data.bitmapHeaderPointer, stream->packet.header.sizeofBitmapHeader, 0);
+    //Invio frame
+    err = send(stream->sock, stream->packet.data.bufferPointer, stream->packet.header.sizeofBuffer, 0);
+    //Invio EOF
+    strcpy(buffer,EOF);
+    err = send(stream->sock, &buffer, sizeof(buffer), 0);
+    /*Verificare*/
 
     if (err < 0)
     {
@@ -75,20 +88,21 @@ esp_err_t streamer_send(struct streamer *stream)
         stream->connected = false;
         return streamer_init(stream);
     }
+    ESP_LOGI(TAG, "Packet sended to target");
     return ESP_OK;
 }
 
-esp_err_t streamer_prepare_packet_data(struct streamer *stream, void* data, void* bitmap, uint32_t sizeOfData, uint32_t sizeOfHeader )
+esp_err_t streamer_prepare_packet_data(struct streamer *stream, void* data, void* bitmapHeader, uint32_t sizeOfData, uint32_t sizeOfHeader )
 {
-    if(data == NULL || bitmap == NULL)
+    if(data == NULL || bitmapHeader == NULL)
     {
         return ESP_ERR_STREAM_BUFFER_ERROR;
     }
     /*FrameData*/
     stream->packet.data.bufferPointer = data;
-    stream->packet.data.sizeofBuffer  = sizeOfData;
+    stream->packet.header.sizeofBuffer  = sizeOfData;
     /*BitmapHeader*/
-    stream->packet.header.bitmapHeader        = bitmap;
+    stream->packet.data.bitmapHeaderPointer = bitmapHeader;
     stream->packet.header.sizeofBitmapHeader  = sizeOfHeader;
 
     return ESP_OK;

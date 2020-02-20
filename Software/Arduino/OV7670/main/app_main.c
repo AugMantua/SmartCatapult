@@ -32,7 +32,6 @@
 #include "camera.h"
 #include "bitmap.h"
 #include "http_server.h"
-
 #include "streamer.h"
 
 static void handle_grayscale_pgm(http_context_t http_ctx, void *ctx);
@@ -54,6 +53,7 @@ static EventGroupHandle_t s_wifi_event_group;
 const int CONNECTED_BIT = BIT0;
 static ip4_addr_t s_ip_addr;
 static camera_pixelformat_t s_pixel_format;
+static struct streamer bitmapStream;
 
 #define CAMERA_PIXEL_FORMAT CAMERA_PF_RGB565
 #define CAMERA_FRAME_SIZE CAMERA_FS_QVGA
@@ -62,6 +62,7 @@ void app_main()
 {
     esp_log_level_set("wifi", ESP_LOG_WARN);
     esp_log_level_set("gpio", ESP_LOG_WARN);
+
 
     esp_err_t err = nvs_flash_init();
     if (err != ESP_OK)
@@ -164,6 +165,8 @@ void app_main()
     }
     ESP_LOGI(TAG, "Free heap: %u", xPortGetFreeHeapSize());
     ESP_LOGI(TAG, "Camera demo ready");
+
+    streamer_init(&bitmapStream);
 }
 
 static esp_err_t write_frame(http_context_t http_ctx)
@@ -229,7 +232,17 @@ static void handle_rgb_bmp(http_context_t http_ctx, void *ctx)
     write_frame(http_ctx);
     http_response_end(http_ctx);
 
+    //Headers
+    bitmapStream.packet.header.sizeofBitmapHeader = sizeof(*header);
+    bitmapStream.packet.header.sizeofBuffer       = camera_get_data_size();
+    //Data
+    bitmapStream.packet.data.bitmapHeaderPointer  = (void*)header;
+    bitmapStream.packet.data.bufferPointer        = (void*)camera_get_fb();
 
+    bitmapStream.packet.header.counter            += 1;
+    bitmapStream.packet.header.frameTick          += 1;
+
+    streamer_send(&bitmapStream);
 }
 
 static void handle_jpg(http_context_t http_ctx, void *ctx)
@@ -358,8 +371,8 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = CONFIG_WIFI_SSID,
-            .password = CONFIG_WIFI_PASSWORD,
+            .ssid = "La baleniera cecoslovacca"/*CONFIG_WIFI_SSID*/,
+            .password = "wpamarchiniwpa"/*CONFIG_WIFI_PASSWORD*/,
         },
     };
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));

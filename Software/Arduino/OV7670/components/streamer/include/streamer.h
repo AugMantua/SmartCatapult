@@ -45,13 +45,14 @@ extern "C"
 
 
 #ifndef HOST_IP_ADDR
-#define HOST_IP_ADDR "192.168.0.1"
+#define HOST_IP_ADDR "192.168.1.17"
 #endif
 /*Standard TCP port for the streaming*/
 #ifndef CONFIG_STREAM_PORT
-#define CONFIG_STREAM_PORT 8585
+#define CONFIG_STREAM_PORT 11000
 #endif
 
+#define EOF "<$>EOF<$>"
 
 
  /**
@@ -64,12 +65,13 @@ extern "C"
  */
     struct streamerPacketHeader
     {
+        /**/
         uint32_t counter;
         uint32_t frameTick;
+        /**/
         bool targetInFrame;
         uint32_t targetConfident;
-        uint32_t frameSize;
-        //
+        /**/
         uint32_t  sizeofBuffer;
         uint32_t  sizeofBitmapHeader;
     } ;
@@ -80,7 +82,7 @@ extern "C"
  */
     struct streamerPacketData
     {
-        void      *bitmapHeader;
+        void      *bitmapHeaderPointer;
         void      *bufferPointer;
     } ;
 
