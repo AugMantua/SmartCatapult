@@ -1,0 +1,13 @@
+﻿<Window x:Class="AUGMANSmartCatapultGUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AUGMANSmartCatapultGUI"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid Background="White">
+        <TextBlock x:Name="ServerText" Margin="10,41,10,0" TextWrapping="Wrap" Height="362" VerticalAlignment="Top" Background="#FFD6D6D6"><Run Text="TextBlock"/></TextBlock>
+        <Label Content="TCP Console" HorizontalAlignment="Left" Margin="360,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.952,0.454"/>
+    </Grid>
+</Window>
