@@ -82,4 +82,29 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
             return ByteArrayToStructure<streamerPacketHeader>(bytes, 0x0);
         }
     }
+
+    /* https://stackoverflow.com/questions/21555394/how-to-create-bitmap-from-byte-array
+
+    static byte[] PadLines(byte[] bytes, int rows, int columns)
+    {
+        int currentStride = columns; // 3
+        int newStride = columns;  // 4
+        byte[] newBytes = new byte[newStride * rows];
+        for (int i = 0; i < rows; i++)
+            Buffer.BlockCopy(bytes, currentStride * i, newBytes, newStride * i, currentStride);
+        return newBytes;
+    }
+
+    int columns = imageWidth;
+    int rows = imageHeight;
+    int stride = columns;
+    byte[] newbytes = PadLines(imageData, rows, columns);
+
+    Bitmap im = new Bitmap(columns, rows, stride,
+             PixelFormat.Format8bppIndexed,
+             Marshal.UnsafeAddrOfPinnedArrayElement(newbytes, 0));
+
+    im.Save("C:\\Users\\musa\\Documents\\Hobby\\image21.bmp");
+
+    */
 }

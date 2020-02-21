@@ -47,9 +47,9 @@ namespace AUGMANSmartCatapultGUI
 
         private void ReceiverServerWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            this.ServerText.Text = e.UserState.ToString() + "\n";
-            Stream = Encoding.ASCII.GetBytes(e.UserState.ToString());
-            packetHeader =  deserializer.getPacketHeader(Stream);
+            //this.ServerText.Text = e.UserState.ToString() + "\n";
+            //Stream = Encoding.ASCII.GetBytes(e.UserState.ToString());
+            packetHeader =  deserializer.getPacketHeader(e.UserState as byte[]);
         }
 
         private void ReceiverServerWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -61,7 +61,7 @@ namespace AUGMANSmartCatapultGUI
         {
             while (!receiverServerWorker.CancellationPending)
             {
-                string tmp = this.ReceiverServer.StartListening();
+                byte[] tmp = this.ReceiverServer.StartListening().ToArray();
                 if ( tmp.Length > 0)
                 {
                     receiverServerWorker.ReportProgress(0, tmp);
