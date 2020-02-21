@@ -18,7 +18,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
     * and time of the original frame in order to understand in case speed/acceleration ecc
     * If there is a target into the frame master will set targetInFrame and give % of confident
     */
-    struct streamerPacketHeader
+    public struct streamerPacketHeader
     {
         /**/
         UInt32 counter;
@@ -33,7 +33,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
 
     /*Bitmap structure*/
 
-    unsafe struct fileheader
+    public unsafe struct fileheader
     {
         fixed int signature[2];
         UInt32 filesize;
@@ -41,7 +41,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
         UInt32 fileoffset_to_pixelarray;
     };
 
-    struct bitmapinfoheader
+    public struct bitmapinfoheader
     {
         UInt32 dibheadersize;
         UInt32 width;
@@ -59,7 +59,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
         UInt32 bluemask;
     } ;
 
-    struct bitmap_header_t
+    public struct bitmap_header_t
     {
         fileheader fileheader;
         bitmapinfoheader bitmapinfoheader;
@@ -69,7 +69,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
     {
         const int _HEADER_OFFSET = 0x0;
 
-        unsafe T ByteArrayToStructure<T>(byte[] bytes,int offset) where T : struct
+        public static unsafe T ByteArrayToStructure<T>(byte[] bytes,int offset) where T : struct
         {
             fixed (byte* ptr = &bytes[offset])
             {
@@ -77,7 +77,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
             }
         }
 
-        streamerPacketHeader getPacketHeader(byte[]bytes)
+        public static streamerPacketHeader getPacketHeader(byte[]bytes)
         {
             return ByteArrayToStructure<streamerPacketHeader>(bytes, 0x0);
         }
