@@ -14,6 +14,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.ComponentModel;
 
+using AUGMANSmartCatapultGUI.DataStreaming.DataHandler;
+
 namespace AUGMANSmartCatapultGUI
 {
     /// <summary>
@@ -23,16 +25,20 @@ namespace AUGMANSmartCatapultGUI
     {
         private readonly BackgroundWorker receiverServerWorker;
         private DataStreaming.Receiver.server ReceiverServer;
+        private byte[] Stream;
+        private streamerPacketHeader packetHeader;
 
         public MainWindow()
         {
             this.ReceiverServer = new DataStreaming.Receiver.server();
             this.ReceiverServer.SetListener();
+            /*Async receiver server #BEG*/
             receiverServerWorker = new BackgroundWorker();
             receiverServerWorker.DoWork += ReceiverServerWorker_DoWork;
             receiverServerWorker.RunWorkerCompleted += ReceiverServerWorker_RunWorkerCompleted;
             receiverServerWorker.ProgressChanged += ReceiverServerWorker_ProgressChanged;
             receiverServerWorker.WorkerReportsProgress = true;
+            /*Async receiver server #END*/
 
             InitializeComponent();
 
@@ -42,6 +48,8 @@ namespace AUGMANSmartCatapultGUI
         private void ReceiverServerWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             this.ServerText.Text = e.UserState.ToString() + "\n";
+            Stream = Encoding.ASCII.GetBytes(e.UserState.ToString());
+            packetHeader =  deserializer.getPacketHeader(Stream);
         }
 
         private void ReceiverServerWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)

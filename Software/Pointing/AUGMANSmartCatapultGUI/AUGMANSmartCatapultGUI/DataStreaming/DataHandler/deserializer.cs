@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
+
+
 namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
 {
+
     /**
     * 
     * header structure definition
@@ -14,7 +18,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
     * and time of the original frame in order to understand in case speed/acceleration ecc
     * If there is a target into the frame master will set targetInFrame and give % of confident
     */
-    struct streamerPacketHeader
+    public struct streamerPacketHeader
     {
         /**/
         UInt32 counter;
@@ -27,9 +31,55 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
         UInt32 sizeofHeader;
     };
 
+    /*Bitmap structure*/
+
+    public unsafe struct fileheader
+    {
+        fixed int signature[2];
+        UInt32 filesize;
+        UInt32 reserved;
+        UInt32 fileoffset_to_pixelarray;
+    };
+
+    public struct bitmapinfoheader
+    {
+        UInt32 dibheadersize;
+        UInt32 width;
+        UInt32 height;
+        UInt16 planes;
+        UInt16 bitsperpixel;
+        UInt32 compression;
+        UInt32 imagesize;
+        UInt32 ypixelpermeter;
+        UInt32 xpixelpermeter;
+        UInt32 numcolorspallette;
+        UInt32 mostimpcolor;
+        UInt32 redmask;
+        UInt32 greenmask;
+        UInt32 bluemask;
+    } ;
+
+    public struct bitmap_header_t
+    {
+        fileheader fileheader;
+        bitmapinfoheader bitmapinfoheader;
+    };
 
     public class deserializer
     {
+        const int _HEADER_OFFSET = 0x0;
 
+        public static unsafe T ByteArrayToStructure<T>(byte[] bytes,int offset) where T : struct
+        {
+            fixed (byte* ptr = &bytes[offset])
+            {
+                return (T)Marshal.PtrToStructure((IntPtr)ptr, typeof(T));
+            }
+        }
+
+        public static streamerPacketHeader getPacketHeader(byte[]bytes)
+        {
+            return ByteArrayToStructure<streamerPacketHeader>(bytes, 0x0);
+        }
     }
 }

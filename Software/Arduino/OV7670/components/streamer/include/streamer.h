@@ -52,7 +52,7 @@ extern "C"
 #define CONFIG_STREAM_PORT 11000
 #endif
 
-#define EOF "<$>EOF<$>"
+#define EOF "<EOF>"
 
 
  /**

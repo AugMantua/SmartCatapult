@@ -26,12 +26,14 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
         private bool isListenerSet;
         private Socket handler;
         private bool isBoundToNode;
-
+        private byte[] MemoryBlock;
+        private int byteCounter; 
 
         public server()
         {
             serverSocket = new TcpListener(8888);
             clientSocket = default(TcpClient);
+            MemoryBlock = new byte[2048 * 100]; 
         }
 
         public int SetListener()
@@ -44,7 +46,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
             // Dns.GetHostName returns the name of the 
             // host running the application.
             ipHostInfo = Dns.Resolve(Dns.GetHostName());
-            ipAddress = ipHostInfo.AddressList[2];
+            ipAddress = ipHostInfo.AddressList[3];
             localEndPoint = new IPEndPoint(ipAddress, 11000);
 
             // Create a TCP/IP socket.
@@ -93,19 +95,22 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
             // An incoming connection needs to be processed.
             while (true)
             {
-                bytes = new byte[4096];
+                bytes = new byte[8192];
                 int bytesRec = handler.Receive(bytes);
+                byteCounter += bytesRec;
+                //da sistemare con allocazione dinamica, lista?
                 data += Encoding.ASCII.GetString(bytes, 0, bytesRec);
-                if (data.IndexOf("<$>EOF<$>") > -1 || bytesRec.Equals(0))
+                if (data.IndexOf("<EOF>") > -1 || bytesRec.Equals(0))
                 {
+                    byteCounter = 0;
                     break;
                 }
             }
-            data = data.Replace("<$>EOF<$>", "");
+            data = data.Replace("<EOF>", "");
             Console.WriteLine(data.Length);
             return data;
         }
-
+       
         public void CloseConnection()
         {
             handler.Shutdown(SocketShutdown.Both);
