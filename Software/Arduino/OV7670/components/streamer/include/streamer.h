@@ -45,7 +45,7 @@ extern "C"
 
 
 #ifndef HOST_IP_ADDR
-#define HOST_IP_ADDR "192.168.1.17"
+#define HOST_IP_ADDR "172.20.10.3"
 #endif
 /*Standard TCP port for the streaming*/
 #ifndef CONFIG_STREAM_PORT

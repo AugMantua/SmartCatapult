@@ -48,7 +48,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
             // Dns.GetHostName returns the name of the 
             // host running the application.
             ipHostInfo = Dns.Resolve(Dns.GetHostName());
-            ipAddress = ipHostInfo.AddressList[3];
+            ipAddress = ipHostInfo.AddressList[2];
             localEndPoint = new IPEndPoint(ipAddress, 11000);
 
             // Create a TCP/IP socket.

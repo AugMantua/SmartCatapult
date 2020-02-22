@@ -15,6 +15,8 @@ using System.Windows.Shapes;
 using System.ComponentModel;
 
 using AUGMANSmartCatapultGUI.DataStreaming.DataHandler;
+using System.IO;
+using System.Drawing;
 
 namespace AUGMANSmartCatapultGUI
 {
@@ -45,11 +47,30 @@ namespace AUGMANSmartCatapultGUI
             receiverServerWorker.RunWorkerAsync();
         }
 
-        private void ReceiverServerWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        unsafe private void ReceiverServerWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             //this.ServerText.Text = e.UserState.ToString() + "\n";
             //Stream = Encoding.ASCII.GetBytes(e.UserState.ToString());
             packetHeader =  deserializer.getPacketHeader(e.UserState as byte[]);
+            byte[] var = new byte[153600];
+            int counter = 153600;
+            int offset = sizeof(DataStreaming.DataHandler.streamerPacketHeader) + 66 ;
+            try
+            {
+                for (int i = 0; i < counter; i++)
+                {
+                    var[i] = (e.UserState as byte[])[i + offset];
+                }
+            }catch(Exception)
+            {
+                return;
+            }
+            ImageHolder.Source = null;
+
+            Bitmap bmp  = deserializer.CreateBitmap(320, 240, var, System.Drawing.Imaging.PixelFormat.Format16bppRgb565, "C:\\temp\\stream.bmp");
+            bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+            ImageHolder.Source = deserializer.Convert(bmp); 
+
         }
 
         private void ReceiverServerWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)

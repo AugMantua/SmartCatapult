@@ -7,7 +7,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid Background="White">
-        <TextBlock x:Name="ServerText" Margin="10,41,10,0" TextWrapping="Wrap" Height="362" VerticalAlignment="Top" Background="#FFD6D6D6"><Run Text="TextBlock"/></TextBlock>
+        <TextBlock x:Name="ServerText" Margin="571,41,10,0" TextWrapping="Wrap" Height="362" VerticalAlignment="Top" Background="#FFD6D6D6"><Run Text="TextBlock"/></TextBlock>
         <Label Content="TCP Console" HorizontalAlignment="Left" Margin="360,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.952,0.454"/>
+        <Image x:Name="ImageHolder" HorizontalAlignment="Left" Height="362" Margin="26,41,0,0" VerticalAlignment="Top" Width="501"/>
     </Grid>
 </Window>
