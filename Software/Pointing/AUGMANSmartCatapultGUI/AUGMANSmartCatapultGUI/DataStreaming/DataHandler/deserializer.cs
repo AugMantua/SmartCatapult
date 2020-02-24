@@ -109,7 +109,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
             return im;
         }
 
-        public static BitmapImage Convert(Bitmap src)
+        public static BitmapImage ConvertBitmapToSource(Bitmap src)
         {
             MemoryStream ms = new MemoryStream();
             ((System.Drawing.Bitmap)src).Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);

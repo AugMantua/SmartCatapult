@@ -29,11 +29,18 @@ namespace AUGMANSmartCatapultGUI
         private DataStreaming.Receiver.server ReceiverServer;
         private byte[] Stream;
         private streamerPacketHeader packetHeader;
+        private Pointing.NN.Core pointer;
 
         public MainWindow()
         {
             this.ReceiverServer = new DataStreaming.Receiver.server();
             this.ReceiverServer.SetListener();
+
+            /*Pointing system #BEG*/
+            this.pointer = new Pointing.NN.Core();
+            this.pointer.StartNet();
+            /*Pointing system #BEG*/
+
             /*Async receiver server #BEG*/
             receiverServerWorker = new BackgroundWorker();
             receiverServerWorker.DoWork += ReceiverServerWorker_DoWork;
@@ -54,7 +61,7 @@ namespace AUGMANSmartCatapultGUI
             packetHeader =  deserializer.getPacketHeader(e.UserState as byte[]);
             byte[] var = new byte[153600];
             int counter = 153600;
-            int offset = sizeof(DataStreaming.DataHandler.streamerPacketHeader) + 66 ;
+            int offset = sizeof(streamerPacketHeader) + 66 ;
             try
             {
                 for (int i = 0; i < counter; i++)
@@ -69,7 +76,12 @@ namespace AUGMANSmartCatapultGUI
 
             Bitmap bmp  = deserializer.CreateBitmap(320, 240, var, System.Drawing.Imaging.PixelFormat.Format16bppRgb565, "C:\\temp\\stream.bmp");
             bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
-            ImageHolder.Source = deserializer.Convert(bmp); 
+            using (MemoryStream ms = new MemoryStream())
+            {
+                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                pointer.AnalyzeStream(ms);
+            }
+            ImageHolder.Source = deserializer.ConvertBitmapToSource(bmp); 
 
         }
 
