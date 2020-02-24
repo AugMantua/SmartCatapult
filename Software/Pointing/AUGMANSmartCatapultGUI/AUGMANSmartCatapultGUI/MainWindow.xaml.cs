@@ -17,6 +17,8 @@ using System.ComponentModel;
 using AUGMANSmartCatapultGUI.DataStreaming.DataHandler;
 using System.IO;
 using System.Drawing;
+using Alturos.Yolo.Model;
+using AUGMANSmartCatapultGUI.Pointing.FrameArray;
 
 namespace AUGMANSmartCatapultGUI
 {
@@ -30,6 +32,7 @@ namespace AUGMANSmartCatapultGUI
         private byte[] Stream;
         private streamerPacketHeader packetHeader;
         private Pointing.NN.Core pointer;
+        private Pointing.FrameArray.Handler frameArrayHandler;
 
         public MainWindow()
         {
@@ -39,6 +42,8 @@ namespace AUGMANSmartCatapultGUI
             /*Pointing system #BEG*/
             this.pointer = new Pointing.NN.Core();
             this.pointer.StartNet();
+            /*Frame Array init*/
+            frameArrayHandler = new Pointing.FrameArray.Handler();
             /*Pointing system #BEG*/
 
             /*Async receiver server #BEG*/
@@ -56,20 +61,23 @@ namespace AUGMANSmartCatapultGUI
 
         unsafe private void ReceiverServerWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            //this.ServerText.Text = e.UserState.ToString() + "\n";
-            //Stream = Encoding.ASCII.GetBytes(e.UserState.ToString());
+            /*Questa parte è da pulire creando un metodo nella classe di deserializzazione oppure nel puntamento*/
             packetHeader =  deserializer.getPacketHeader(e.UserState as byte[]);
             byte[] var = new byte[153600];
             int counter = 153600;
             int offset = sizeof(streamerPacketHeader) + 66 ;
+            counter = (e.UserState as byte[]).Length < 153600 ? (e.UserState as byte[]).Length : 153600;
+            if((counter + offset ) > (e.UserState as byte[]).Length)
+                return;
             try
             {
                 for (int i = 0; i < counter; i++)
                 {
                     var[i] = (e.UserState as byte[])[i + offset];
                 }
-            }catch(Exception)
+            }catch(Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return;
             }
             ImageHolder.Source = null;
@@ -79,7 +87,15 @@ namespace AUGMANSmartCatapultGUI
             using (MemoryStream ms = new MemoryStream())
             {
                 bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                pointer.AnalyzeStream(ms);
+                YoloItem tmp = pointer.AnalyzeStream(ms);
+                detectionObject obj;
+                if (tmp != null)
+                {
+                    obj.nnItem = tmp;
+                    obj.originHeader = packetHeader;
+                    obj.originHeader.targetInFrame = true;
+                    obj.originHeader.targetConfident = Convert.ToUInt16(tmp.Confidence*10);
+                }
             }
             ImageHolder.Source = deserializer.ConvertBitmapToSource(bmp); 
         }
