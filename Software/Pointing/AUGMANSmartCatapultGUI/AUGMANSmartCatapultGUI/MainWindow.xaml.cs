@@ -82,7 +82,6 @@ namespace AUGMANSmartCatapultGUI
                 pointer.AnalyzeStream(ms);
             }
             ImageHolder.Source = deserializer.ConvertBitmapToSource(bmp); 
-
         }
 
         private void ReceiverServerWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)

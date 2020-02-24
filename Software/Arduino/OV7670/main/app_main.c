@@ -293,6 +293,7 @@ static void handle_rgb_bmp_stream(http_context_t http_ctx, void *ctx)
 
         if (err != ESP_OK)
         {
+            ESP_LOGD(TAG, "Send failed with error = %d", err);
             break;
         }
     }
