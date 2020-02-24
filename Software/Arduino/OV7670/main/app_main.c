@@ -272,6 +272,9 @@ static void handle_rgb_bmp_stream(http_context_t http_ctx, void *ctx)
         .data = header,
         .size = sizeof(*header)};
 
+    bitmapStream.packet.header.sizeofBitmapHeader = sizeof(*header);
+    bitmapStream.packet.data.bitmapHeaderPointer  = (void*)header;
+
     while (true)
     {
         esp_err_t err = camera_run();
@@ -281,25 +284,16 @@ static void handle_rgb_bmp_stream(http_context_t http_ctx, void *ctx)
             return;
         }
 
-        err = http_response_begin_multipart(http_ctx, "image/bitmap",
-                                            camera_get_data_size() + sizeof(*header));
+        //Data
+        bitmapStream.packet.header.sizeofBuffer       = camera_get_data_size();
+        bitmapStream.packet.data.bufferPointer        = (void*)camera_get_fb();
+        bitmapStream.packet.header.counter            += 1;
+        bitmapStream.packet.header.frameTick          += 1;
+        err = streamer_send(&bitmapStream);
+
         if (err != ESP_OK)
         {
-            break;
-        }
-        err = http_response_write(http_ctx, &bmp_header);
-        if (err != ESP_OK)
-        {
-            break;
-        }
-        err = write_frame(http_ctx);
-        if (err != ESP_OK)
-        {
-            break;
-        }
-        err = http_response_end_multipart(http_ctx, STREAM_BOUNDARY);
-        if (err != ESP_OK)
-        {
+            ESP_LOGD(TAG, "Send failed with error = %d", err);
             break;
         }
     }
@@ -371,8 +365,8 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = "La baleniera cecoslovacca"/*CONFIG_WIFI_SSID*/,
-            .password = "wpamarchiniwpa"/*CONFIG_WIFI_PASSWORD*/,
+            .ssid = "iPhone"/*CONFIG_WIFI_SSID*/,
+            .password = "pietro1234"/*CONFIG_WIFI_PASSWORD*/,
         },
     };
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));

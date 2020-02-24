@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Security;
 using System.Runtime.InteropServices;
 
+
 namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
 {
     public class server
@@ -26,14 +27,15 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
         private bool isListenerSet;
         private Socket handler;
         private bool isBoundToNode;
-        private byte[] MemoryBlock;
-        private int byteCounter; 
+        private List<byte> Internalbuffer;
+
+
 
         public server()
         {
             serverSocket = new TcpListener(8888);
             clientSocket = default(TcpClient);
-            MemoryBlock = new byte[2048 * 100]; 
+            Internalbuffer = new List<byte>();
         }
 
         public int SetListener()
@@ -46,7 +48,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
             // Dns.GetHostName returns the name of the 
             // host running the application.
             ipHostInfo = Dns.Resolve(Dns.GetHostName());
-            ipAddress = ipHostInfo.AddressList[3];
+            ipAddress = ipHostInfo.AddressList[2];
             localEndPoint = new IPEndPoint(ipAddress, 11000);
 
             // Create a TCP/IP socket.
@@ -67,8 +69,9 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
             return 1;
         }
 
-        public string StartListening()
+        public List<byte> StartListening()
         {
+
             if(!isListenerSet)
             {
                 SetListener();
@@ -91,24 +94,25 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
 
                 
             data = null;
+            Internalbuffer.Clear();
 
             // An incoming connection needs to be processed.
             while (true)
             {
                 bytes = new byte[8192];
                 int bytesRec = handler.Receive(bytes);
-                byteCounter += bytesRec;
-                //da sistemare con allocazione dinamica, lista?
-                data += Encoding.ASCII.GetString(bytes, 0, bytesRec);
-                if (data.IndexOf("<EOF>") > -1 || bytesRec.Equals(0))
+                for(int i = 0; i < bytesRec; i++)
                 {
-                    byteCounter = 0;
+                    Internalbuffer.Add(bytes[i]);
+                }
+                //Vale la pena di fare una funzione per cercare EOF non testuale
+                if (Encoding.ASCII.GetString(bytes, 0, bytesRec).IndexOf("<EOF>") > -1 || bytesRec.Equals(0))
+                {
                     break;
                 }
             }
-            data = data.Replace("<EOF>", "");
-            Console.WriteLine(data.Length);
-            return data;
+            //data = data.Replace("<EOF>", "");
+            return Internalbuffer;
         }
        
         public void CloseConnection()

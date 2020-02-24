@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
-
+using System.Windows.Media.Imaging;
 
 namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
 {
@@ -21,14 +23,14 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
     public struct streamerPacketHeader
     {
         /**/
-        UInt32 counter;
-        UInt32 frameTick;
+        public UInt32 counter;
+        public UInt32 frameTick;
         /**/
-        bool targetInFrame;
-        UInt32 targetConfident;
+        public bool targetInFrame;
+        public UInt32 targetConfident;
         /**/
-        UInt32 sizeofBuffer;
-        UInt32 sizeofHeader;
+        public UInt32 sizeofBuffer;
+        public UInt32 sizeofHeader;
     };
 
     /*Bitmap structure*/
@@ -57,7 +59,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
         UInt32 redmask;
         UInt32 greenmask;
         UInt32 bluemask;
-    } ;
+    };
 
     public struct bitmap_header_t
     {
@@ -69,7 +71,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
     {
         const int _HEADER_OFFSET = 0x0;
 
-        public static unsafe T ByteArrayToStructure<T>(byte[] bytes,int offset) where T : struct
+        public static unsafe T ByteArrayToStructure<T>(byte[] bytes, int offset) where T : struct
         {
             fixed (byte* ptr = &bytes[offset])
             {
@@ -77,9 +79,52 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
             }
         }
 
-        public static streamerPacketHeader getPacketHeader(byte[]bytes)
+        public static streamerPacketHeader getPacketHeader(byte[] bytes)
         {
             return ByteArrayToStructure<streamerPacketHeader>(bytes, 0x0);
         }
+
+
+        public static byte[] PadLines(byte[] bytes, int rows, int columns)
+        {
+            int currentStride = columns; // 3
+            int newStride = columns;  // 4
+            byte[] newBytes = new byte[newStride * rows];
+            for (int i = 0; i < rows; i++)
+                Buffer.BlockCopy(bytes, currentStride * i, newBytes, newStride * i, currentStride);
+            return newBytes;
+        }
+
+        public static Bitmap CreateBitmap(int imageWidth, int imageHeight,byte[] imageData, PixelFormat format, string Path)
+        {
+            int columns = imageWidth;
+            int rows = imageHeight;
+            int bpp = 2;
+            int stride = columns * bpp;
+
+            Bitmap im = new Bitmap(columns, rows, stride,
+                     format,
+                     Marshal.UnsafeAddrOfPinnedArrayElement(imageData, 0));
+            //im.Save(Path);
+            return im;
+        }
+
+        public static BitmapImage ConvertBitmapToSource(Bitmap src)
+        {
+            MemoryStream ms = new MemoryStream();
+            ((System.Drawing.Bitmap)src).Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+            BitmapImage image = new BitmapImage();
+            image.BeginInit();
+            ms.Seek(0, SeekOrigin.Begin);
+            image.StreamSource = ms;
+            image.EndInit();
+            return image;
+        }
+
     }
+
+
+    /* https://stackoverflow.com/questions/21555394/how-to-create-bitmap-from-byte-array*/
+
+
 }
