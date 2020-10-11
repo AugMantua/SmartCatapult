@@ -15,6 +15,20 @@
 
 static const char *TAG = "TCP Bitmap Streamer";
 
+/*
+* set IP adress and port for data streaming
+*/
+esp_err_t streamer_config(
+    struct streamer *stream,
+    const char *ip,
+    uint16_t streamerPort,
+    )
+{
+    stream->socketAddress.sin_addr.s_addr = inet_addr(ip);
+    stream->socketAddress.sin_addr.s_addr = htons(streamerPort);
+    stream->socketAddress.sin_family = AF_INET;
+}
+
 esp_err_t streamer_init(struct streamer *stream)
 {
     /*Check if structure is ready*/
@@ -30,9 +44,11 @@ esp_err_t streamer_init(struct streamer *stream)
 #ifdef CONFIG_STREAM_IPV6
     return ESP_ERR_STREAM_FUN_NOT_IMPLEM;
 #else // IPV4
-    stream->socketAddress.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
-    stream->socketAddress.sin_family = AF_INET;
-    stream->socketAddress.sin_port = htons(CONFIG_STREAM_PORT);
+    if (stream->socketAddress.sin_addr.s_addr == 0 ||
+        stream->socketAddress.sin_port == 0)
+    {
+        return ESP_ERR_SOCKET_MISSING_CONFIG;
+    }
     stream->addr_family = AF_INET;
     stream->ip_protocol = IPPROTO_IP;
     inet_ntoa_r(stream->socketAddress.sin_addr, stream->addr_str, sizeof(stream->addr_str) - 1);
@@ -59,6 +75,14 @@ esp_err_t streamer_init(struct streamer *stream)
     return ESP_OK;
 }
 
+/* Send the packet divided into header
+*  packet header
+*  bitmap header
+*  bitmap stream
+*  EOF
+*  Eof can be removed considering the size of the packet that is set into the headers -> TODO
+*/
+
 esp_err_t streamer_send(struct streamer *stream)
 {
     char buffer[512];
@@ -68,8 +92,7 @@ esp_err_t streamer_send(struct streamer *stream)
     }
     ESP_LOGI(TAG, "Sending packet to target");
     int err = 0;
-    /*Provo a inviare a pezzi*/
-    //Invio Header pacchetto
+
     ESP_LOGI(TAG, "Packet dimensions : dataHeaderBitmap = %d, data = %d", stream->packet.header.sizeofBitmapHeader, stream->packet.header.sizeofBuffer);
     err = send(stream->sock, &stream->packet.header, sizeof(stream->packet.header), 0);
     //Invio bitmapHeader

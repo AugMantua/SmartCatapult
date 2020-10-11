@@ -58,6 +58,7 @@ static struct streamer bitmapStream;
 #define CAMERA_PIXEL_FORMAT CAMERA_PF_RGB565
 #define CAMERA_FRAME_SIZE CAMERA_FS_QVGA
 
+
 void app_main()
 {
     esp_log_level_set("wifi", ESP_LOG_WARN);
@@ -166,6 +167,13 @@ void app_main()
     ESP_LOGI(TAG, "Free heap: %u", xPortGetFreeHeapSize());
     ESP_LOGI(TAG, "Camera demo ready");
 
+    /*Set ip address and port for stream*/
+    streamer_config(
+        &bitmapStream,
+        HOST_IP_ADDR,
+        CONFIG_STREAM_PORT,
+    );
+    /*Init stream*/
     streamer_init(&bitmapStream);
 }
 
