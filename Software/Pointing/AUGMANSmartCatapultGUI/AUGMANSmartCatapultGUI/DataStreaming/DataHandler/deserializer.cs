@@ -95,7 +95,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.DataHandler
             return newBytes;
         }
 
-        public static Bitmap CreateBitmap(int imageWidth, int imageHeight,byte[] imageData, PixelFormat format, string Path)
+        public static Bitmap CreateBitmap(int imageWidth, int imageHeight,byte[] imageData, PixelFormat format)
         {
             int columns = imageWidth;
             int rows = imageHeight;

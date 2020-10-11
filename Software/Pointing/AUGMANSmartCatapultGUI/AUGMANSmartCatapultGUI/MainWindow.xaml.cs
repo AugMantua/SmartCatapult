@@ -1,4 +1,7 @@
-﻿using System;
+﻿#define _DEBUG
+#define _MEMORY_STREAM
+/*Remove definition in order to remove debug on screen*/
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -63,11 +66,19 @@ namespace AUGMANSmartCatapultGUI
         {
             /*Questa parte è da pulire creando un metodo nella classe di deserializzazione oppure nel puntamento*/
             packetHeader =  deserializer.getPacketHeader(e.UserState as byte[]);
+#if (_DEBUG)
+            /*Display Frame header #BEG*/
+            ServerText.Text = "Frame Counter  = " + packetHeader.counter + "\n" +
+                              "Frame Tick     = " + packetHeader.frameTick + "\n" +
+                              "Size of buffer = " + packetHeader.sizeofBuffer + "\n" +
+                              "Size of header = " + packetHeader.sizeofHeader + "\n";
+            /*Display Frame header #END*/
+#endif
             byte[] var = new byte[153600];
             int counter = 153600;
             int offset = sizeof(streamerPacketHeader) + 66 ;
             counter = (e.UserState as byte[]).Length < 153600 ? (e.UserState as byte[]).Length : 153600;
-            if((counter + offset ) > (e.UserState as byte[]).Length)
+            if((counter + offset ) > (e.UserState as byte[]).Length || ( (e.UserState as byte[]).Length  != 154202)) //quick and dirty, dimensione del pacchetto corretto al momento, da verificare di cosa si tratti
                 return;
             try
             {
@@ -81,13 +92,17 @@ namespace AUGMANSmartCatapultGUI
                 return;
             }
             ImageHolder.Source = null;
-
-            Bitmap bmp  = deserializer.CreateBitmap(320, 240, var, System.Drawing.Imaging.PixelFormat.Format16bppRgb565, "C:\\temp\\stream.bmp");
+            Bitmap bmp  = deserializer.CreateBitmap(320, 240, var, System.Drawing.Imaging.PixelFormat.Format16bppRgb565);
             bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
             using (MemoryStream ms = new MemoryStream())
             {
+#if (_MEMORY_STREAM)
                 bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
                 YoloItem tmp = pointer.AnalyzeStream(ms);
+#else
+                bmp.Save("C:\\temp\\stream.png", System.Drawing.Imaging.ImageFormat.Png);
+                YoloItem tmp = pointer.AnalyzePng("C:\\temp\\stream.png");
+#endif
                 detectionObject obj;
                 if (tmp != null)
                 {
@@ -95,9 +110,15 @@ namespace AUGMANSmartCatapultGUI
                     obj.originHeader = packetHeader;
                     obj.originHeader.targetInFrame = true;
                     obj.originHeader.targetConfident = Convert.ToUInt16(tmp.Confidence*10);
+                    frameArrayHandler.AddElement(obj);
+                    ServerText.Text += "Object found = " + tmp.Type.ToString() + "\n" +
+                                       "Position X/Y = " + tmp.X + "/" + tmp.Y + "\n";
                 }
             }
-            ImageHolder.Source = deserializer.ConvertBitmapToSource(bmp); 
+#if (_DEBUG)
+            ImageHolder.Source = deserializer.ConvertBitmapToSource(bmp);
+#endif
+
         }
 
         private void ReceiverServerWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)

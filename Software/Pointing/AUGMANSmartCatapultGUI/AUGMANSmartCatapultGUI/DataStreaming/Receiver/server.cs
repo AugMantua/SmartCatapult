@@ -20,7 +20,7 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
         private string pass;
         private System.Security.SecureString pass_secure;
         byte[] bytes;
-        private Socket listener;
+        private Socket socket;
         private IPHostEntry ipHostInfo;
         private IPAddress ipAddress;
         private IPEndPoint localEndPoint;
@@ -38,6 +38,11 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
             Internalbuffer = new List<byte>();
         }
 
+        public Socket getSocket()
+        {
+            return this.socket;
+        }
+
         public int SetListener()
         {
             // Data buffer for incoming data.
@@ -52,14 +57,14 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
             localEndPoint = new IPEndPoint(ipAddress, 11000);
 
             // Create a TCP/IP socket.
-            listener = new Socket(AddressFamily.InterNetwork,SocketType.Stream, ProtocolType.Tcp);
+            socket = new Socket(AddressFamily.InterNetwork,SocketType.Stream, ProtocolType.Tcp);
 
             // Bind the socket to the local endpoint and 
             // listen for incoming connections.
             try
             {
-                listener.Bind(localEndPoint);
-                listener.Listen(10);
+                socket.Bind(localEndPoint);
+                socket.Listen(10);
             }catch(Exception e)
             {
                 Console.WriteLine(e.Message);
@@ -82,13 +87,13 @@ namespace AUGMANSmartCatapultGUI.DataStreaming.Receiver
             {
                 if (!handler.Connected)
                 {
-                    this.handler = listener.Accept();
+                    this.handler = socket.Accept();
                     this.isBoundToNode = true;
                 }
             }
             else
             {
-                this.handler = listener.Accept();
+                this.handler = socket.Accept();
                 this.isBoundToNode = true;
             }
 

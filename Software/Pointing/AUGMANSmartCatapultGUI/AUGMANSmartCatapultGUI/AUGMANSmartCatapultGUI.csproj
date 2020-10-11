@@ -94,6 +94,7 @@
     </Compile>
     <Compile Include="DataStreaming\DataHandler\deserializer.cs" />
     <Compile Include="DataStreaming\Receiver\server.cs" />
+    <Compile Include="DataStreaming\Sender\client.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -128,8 +129,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DataStreaming\Sender\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
